@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Form Pendaftaran</title>
+</head>
+<body>
+    <h2>Form Pendaftaran Mahasiswa</h2>
+
+    {{if .error}}
+        <p style="color:red">{{.error}}</p>
+    {{end}}
+
+    <form action="/register" method="POST" enctype="multipart/form-data">
+        <label>Nama:</label><br>
+        <input type="text" name="name" required><br><br>
+
+        <label>Email:</label><br>
+        <input type="email" name="email" required><br><br>
+
+        <label>Program Studi:</label><br>
+        <input type="text" name="program" required><br><br>
+
+        <label>Upload Foto:</label><br>
+        <input type="file" name="photo"><br><br>
+
+        <label>Upload KTP:</label><br>
+        <input type="file" name="ktp"><br><br>
+
+        <label>Upload Ijazah:</label><br>
+        <input type="file" name="ijazah"><br><br>
+
+        <button type="submit">Daftar</button>
+    </form>
+
+    <br>
+    <a href="/">Kembali</a>
+</body>
+</html>

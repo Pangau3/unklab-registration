@@ -1,0 +1,16 @@
+<table border="1" cellpadding="10">
+    <tr>
+        <th>Nama</th>
+        <th>Email</th>
+        <th>Program Studi</th>
+        <th>Status</th>
+    </tr>
+    {{range .students}}
+    <tr>
+        <td>{{.Name}}</td>
+        <td>{{.Email}}</td>
+        <td>{{.Program}}</td>
+        <td>{{.Status}}</td>
+    </tr>
+    {{end}}
+</table>

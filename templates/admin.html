@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logout-btn {
+            background-color: #dc3545;
+            color: white;
+            padding: 8px 14px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .logout-btn:hover {
+            background-color: #c82333;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid #261732;
+        }
+        th {
+            background-color: #7c2cc2;
+        }
+        th, td {
+            padding: 10px;
+            text-align: center;
+        }
+        .approve {
+            color: green;
+            font-weight: bold;
+            text-decoration: none;
+        }
+        .reject {
+            color: red;
+            font-weight: bold;
+            text-decoration: none;
+        }
+        .back {
+            display: inline-block;
+            margin-top: 20px;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h2>Dashboard Admin</h2>
+        <a href="/logout" class="logout-btn">Logout</a>
+    </div>
+
+    <table cellpadding="10">
+        <tr>
+            <th>Nama</th>
+            <th>Email</th>
+            <th>Program Studi</th>
+            <th>Status</th>
+            <th>Aksi</th>
+        </tr>
+        {{range .students}}
+        <tr>
+            <td>{{.Name}}</td>
+            <td>{{.Email}}</td>
+            <td>{{.Program}}</td>
+            <td>{{.Status}}</td>
+            <td>
+                <a href="/admin/update/{{.ID}}/Approved" class="approve">Approve</a> |
+                <a href="/admin/update/{{.ID}}/Rejected" class="reject">Reject</a>
+            </td>
+        </tr>
+        {{end}}
+    </table>
+
+    <br>
+    <a href="/" class="back">Kembali ke Beranda</a>
+
+</body>
+</html>
