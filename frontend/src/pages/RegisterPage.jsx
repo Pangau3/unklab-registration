@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { registerStudent } from "../api";
-import FileMeta from "../components/FileMeta";
+import FileUploadField from "../components/FileUploadField";
 import FormField from "../components/FormField";
 import {
   DOCUMENT_ACCEPT,
@@ -101,7 +101,9 @@ function RegisterPage() {
         <div className="helper-card">
           <strong>Dokumen wajib</strong>
           <ul className="plain-list">
-            <li>Foto: {REGISTRATION_DOCUMENTS.photo.helpText.replace("Wajib diunggah. ", "")}</li>
+            <li>
+              Foto: {REGISTRATION_DOCUMENTS.photo.helpText.replace("Wajib diunggah. ", "")}
+            </li>
             <li>KTP: {REGISTRATION_DOCUMENTS.ktp.helpText.replace("Wajib diunggah. ", "")}</li>
             <li>
               Ijazah: {REGISTRATION_DOCUMENTS.ijazah.helpText.replace("Wajib diunggah. ", "")}
@@ -235,35 +237,35 @@ function RegisterPage() {
           </div>
 
           <div className="form-row two-column document-upload-grid">
-            <FormField error={fieldErrors.photo} helpText={DOCUMENT_HINTS.photo} label="Foto">
-              <input
-                accept={DOCUMENT_ACCEPT.photo}
-                name="photo"
-                onChange={handleFileChange}
-                type="file"
-              />
-              <FileMeta file={form.photo} />
-            </FormField>
+            <FileUploadField
+              accept={DOCUMENT_ACCEPT.photo}
+              error={fieldErrors.photo}
+              file={form.photo}
+              helpText={DOCUMENT_HINTS.photo}
+              label="Foto"
+              name="photo"
+              onChange={handleFileChange}
+            />
 
-            <FormField error={fieldErrors.ktp} helpText={DOCUMENT_HINTS.ktp} label="KTP">
-              <input
-                accept={DOCUMENT_ACCEPT.ktp}
-                name="ktp"
-                onChange={handleFileChange}
-                type="file"
-              />
-              <FileMeta file={form.ktp} />
-            </FormField>
+            <FileUploadField
+              accept={DOCUMENT_ACCEPT.ktp}
+              error={fieldErrors.ktp}
+              file={form.ktp}
+              helpText={DOCUMENT_HINTS.ktp}
+              label="KTP"
+              name="ktp"
+              onChange={handleFileChange}
+            />
 
-            <FormField error={fieldErrors.ijazah} helpText={DOCUMENT_HINTS.ijazah} label="Ijazah">
-              <input
-                accept={DOCUMENT_ACCEPT.ijazah}
-                name="ijazah"
-                onChange={handleFileChange}
-                type="file"
-              />
-              <FileMeta file={form.ijazah} />
-            </FormField>
+            <FileUploadField
+              accept={DOCUMENT_ACCEPT.ijazah}
+              error={fieldErrors.ijazah}
+              file={form.ijazah}
+              helpText={DOCUMENT_HINTS.ijazah}
+              label="Ijazah"
+              name="ijazah"
+              onChange={handleFileChange}
+            />
           </div>
         </div>
 

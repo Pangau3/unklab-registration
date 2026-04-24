@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { fetchCurrentAdmin, logoutAdmin } from "./api";
+import homeGate from "./assets/home-gate.jpg";
 import logoUnklab from "./assets/logo-unklab.png";
 import LoadingPanel from "./components/LoadingPanel";
 import ScrollToHash from "./components/ScrollToHash";
@@ -16,6 +17,8 @@ function App() {
     user: null,
   });
   const isAdminRoute = location.pathname.startsWith("/admin");
+  const isHomeRoute = location.pathname === "/";
+  const hasPublicHeader = !isAdminRoute;
 
   useEffect(() => {
     let active = true;
@@ -47,16 +50,21 @@ function App() {
     };
   }, []);
 
+  const appShellClassName = `app-shell ${isHomeRoute ? "app-shell-home" : ""}`.trim();
+  const appShellStyle = isHomeRoute
+    ? { "--home-shell-image": `url(${homeGate})` }
+    : undefined;
+
   return (
-    <div className="app-shell">
-      {!isAdminRoute ? (
-        <header className="topbar">
-          <Link className="brand" to="/">
+    <div className={appShellClassName} style={appShellStyle}>
+      {hasPublicHeader ? (
+        <header className={`topbar ${isHomeRoute ? "topbar-home" : ""}`.trim()}>
+          <Link className={`brand ${isHomeRoute ? "brand-home" : ""}`.trim()} to="/">
             <img alt="Logo Universitas Klabat" className="brand-logo" src={logoUnklab} />
             <span className="brand-text">UNKLAB Registration</span>
           </Link>
 
-          <nav className="topnav">
+          <nav className={`topnav ${isHomeRoute ? "topnav-home" : ""}`.trim()}>
             <Link to="/">Beranda</Link>
             <Link to="/#tentang">Tentang</Link>
             <Link to="/#program">Program</Link>
@@ -65,13 +73,10 @@ function App() {
         </header>
       ) : null}
 
-      <main className="page">
+      <main className={`page ${isHomeRoute ? "page-home" : ""}`.trim()}>
         <ScrollToHash />
         <Routes>
-          <Route
-            path="/"
-            element={<HomePage isAdminAuthenticated={Boolean(authState.user)} />}
-          />
+          <Route path="/" element={<HomePage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route
             path="/admin"
@@ -102,8 +107,8 @@ function App() {
         </Routes>
       </main>
 
-      {!isAdminRoute ? (
-        <footer className="site-footer">
+      {hasPublicHeader ? (
+        <footer className={`site-footer ${isHomeRoute ? "site-footer-home" : ""}`.trim()}>
           <span>Portal pendaftaran mahasiswa baru Universitas Klabat.</span>
         </footer>
       ) : null}

@@ -178,7 +178,7 @@ function AdminDashboard({ user, onLogout, onSessionExpired }) {
               <h2>Kelola approval pendaftar</h2>
               <p>
                 Login sebagai {user.username}. Review dokumen, ubah status, dan
-                pantau antrean verifikasi dari satu tempat yang lebih fokus.
+                pantau antrean verifikasi dalam satu dashboard administrasi.
               </p>
             </div>
           </div>

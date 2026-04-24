@@ -458,11 +458,24 @@
 }
 
 .toolbar-input-shell input {
+  appearance: none;
+  -webkit-appearance: none;
   padding: 0 18px 0 0;
+  box-shadow: none;
+  border-radius: 0;
 }
 
 .toolbar-input-shell input::placeholder {
   color: #ac9ebb;
+}
+
+.toolbar-input-shell input::-webkit-search-decoration,
+.toolbar-input-shell input::-webkit-search-cancel-button,
+.toolbar-input-shell input::-webkit-search-results-button,
+.toolbar-input-shell input::-webkit-search-results-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+  display: none;
 }
 
 .toolbar-select-shell::after {

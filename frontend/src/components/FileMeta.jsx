@@ -7,7 +7,8 @@ function FileMeta({ file }) {
 
   return (
     <span className="file-meta">
-      {file.name} | {formatFileSize(file.size)}
+      <span className="file-meta-name">{file.name}</span>
+      <span className="file-meta-size">{formatFileSize(file.size)}</span>
     </span>
   );
 }
