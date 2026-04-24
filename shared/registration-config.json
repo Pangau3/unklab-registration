@@ -1,0 +1,52 @@
+{
+  "programs": [
+    "Teknik Informatika",
+    "Sistem Informasi",
+    "Akuntansi",
+    "Manajemen",
+    "Keperawatan",
+    "Pendidikan Bahasa Inggris"
+  ],
+  "maxUploadSizeBytes": 5242880,
+  "documents": {
+    "photo": {
+      "label": "Foto",
+      "accept": [".jpg", ".jpeg", ".png"],
+      "mimeTypes": ["image/jpeg", "image/png"],
+      "required": true,
+      "helpText": "Wajib diunggah. Format JPG atau PNG, maksimal 5 MB."
+    },
+    "ktp": {
+      "label": "KTP",
+      "accept": [".jpg", ".jpeg", ".png", ".pdf"],
+      "mimeTypes": ["image/jpeg", "image/png", "application/pdf"],
+      "required": true,
+      "helpText": "Wajib diunggah. Format JPG, PNG, atau PDF, maksimal 5 MB."
+    },
+    "ijazah": {
+      "label": "Ijazah",
+      "accept": [".jpg", ".jpeg", ".png", ".pdf"],
+      "mimeTypes": ["image/jpeg", "image/png", "application/pdf"],
+      "required": true,
+      "helpText": "Wajib diunggah. Format JPG, PNG, atau PDF, maksimal 5 MB."
+    }
+  },
+  "statusFilterOptions": [
+    {
+      "label": "Semua status",
+      "value": "All"
+    },
+    {
+      "label": "Pending",
+      "value": "Pending"
+    },
+    {
+      "label": "Approved",
+      "value": "Approved"
+    },
+    {
+      "label": "Rejected",
+      "value": "Rejected"
+    }
+  ]
+}

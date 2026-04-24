@@ -1,0 +1,12 @@
+frontend/node_modules/
+frontend/dist/
+storage/uploads/
+.gocache/
+.env
+frontend/.env
+.dev-session.json
+server.out.log
+server.err.log
+server.pid
+*.db
+tmp_video_frames/

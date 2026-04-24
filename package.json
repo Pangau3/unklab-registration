@@ -1,0 +1,15 @@
+{
+  "name": "unklab-registration",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "check": "npm run test && npm run build:web",
+    "dev": "node scripts/dev.mjs",
+    "stop:dev": "node scripts/stop-dev.mjs",
+    "dev:api": "go run .",
+    "dev:web": "npm --prefix frontend run dev",
+    "build:web": "npm --prefix frontend run build",
+    "serve": "go run .",
+    "test": "go test ./..."
+  }
+}

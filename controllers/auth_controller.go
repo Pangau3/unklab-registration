@@ -2,46 +2,95 @@ package controllers
 
 import (
 	"net/http"
+	"strings"
+	"time"
 	"unklab-registration/config"
+	"unklab-registration/middleware"
 	"unklab-registration/models"
+	"unklab-registration/utils"
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 )
 
-// Menampilkan halaman login
-func ShowLogin(c *gin.Context) {
-	c.HTML(http.StatusOK, "login.html", nil)
+type loginRequest struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
 }
 
-// Proses login
+type authUserResponse struct {
+	Username string `json:"username"`
+	Role     string `json:"role"`
+}
+
 func Login(c *gin.Context) {
-	username := c.PostForm("username")
-	password := c.PostForm("password")
+	var request loginRequest
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Format login tidak valid.",
+		})
+		return
+	}
+
+	request.Username = strings.TrimSpace(request.Username)
+	request.Password = strings.TrimSpace(request.Password)
+	if request.Username == "" || request.Password == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":  "Username dan password wajib diisi.",
+			"fields": gin.H{"username": "Username wajib diisi.", "password": "Password wajib diisi."},
+		})
+		return
+	}
 
 	var user models.User
-	if err := config.DB.Where("username = ?", username).First(&user).Error; err != nil {
-		c.HTML(http.StatusUnauthorized, "login.html", gin.H{
-			"error": "Username atau password salah",
+	if err := config.DB.Where("username = ? AND role = ?", request.Username, "admin").First(&user).Error; err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "Username atau password salah.",
 		})
 		return
 	}
 
-	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
-	if err != nil {
-		c.HTML(http.StatusUnauthorized, "login.html", gin.H{
-			"error": "Username atau password salah",
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(request.Password)); err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "Username atau password salah.",
 		})
 		return
 	}
 
-	// Simpan session dalam cookie
-	c.SetCookie("session", username, 3600, "/", "", false, true)
-	c.Redirect(http.StatusSeeOther, "/admin")
+	sessionDuration := config.SessionDuration()
+	expiresAt := time.Now().Add(sessionDuration)
+	token := utils.BuildSessionToken(user.Username, expiresAt)
+	utils.SetSessionCookie(c, token, int(sessionDuration.Seconds()))
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Login admin berhasil.",
+		"user": authUserResponse{
+			Username: user.Username,
+			Role:     user.Role,
+		},
+	})
 }
 
-// Logout
 func Logout(c *gin.Context) {
-	c.SetCookie("session", "", -1, "/", "", false, true)
-	c.Redirect(http.StatusSeeOther, "/login")
+	utils.ClearSessionCookie(c)
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Logout berhasil.",
+	})
+}
+
+func Me(c *gin.Context) {
+	user, ok := middleware.CurrentUser(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "Sesi login tidak ditemukan.",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"user": authUserResponse{
+			Username: user.Username,
+			Role:     user.Role,
+		},
+	})
 }

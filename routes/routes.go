@@ -8,22 +8,31 @@ import (
 )
 
 func SetupRoutes(router *gin.Engine) {
-	// Public Routes
-	router.GET("/", controllers.ShowIndex)
-	router.GET("/register", controllers.ShowRegister)
-	router.POST("/register", controllers.RegisterStudent)
-	router.GET("/success", controllers.ShowSuccess)
+	router.Use(middleware.SecurityHeadersMiddleware())
+	router.Use(middleware.CORSMiddleware())
 
-	// Authentication Routes
-	router.GET("/login", controllers.ShowLogin)
-	router.POST("/login", controllers.Login)
-	router.GET("/logout", controllers.Logout)
+	router.GET("/api/health", controllers.HealthCheck)
 
-	// Protected Admin Routes
-	admin := router.Group("/admin")
-	admin.Use(middleware.AuthMiddleware())
+	api := router.Group("/api")
 	{
-		admin.GET("", controllers.AdminDashboard)
-		admin.GET("/update/:id/:status", controllers.UpdateStatus)
+		api.POST("/students/register", controllers.RegisterStudent)
+
+		auth := api.Group("/auth")
+		{
+			auth.POST("/login", middleware.LoginRateLimitMiddleware(), controllers.Login)
+			auth.POST("/logout", controllers.Logout)
+			auth.GET("/me", middleware.AuthMiddleware(), controllers.Me)
+		}
+
+		admin := api.Group("/admin")
+		admin.Use(middleware.AuthMiddleware())
+		{
+			admin.GET("/students", controllers.ListStudents)
+			admin.GET("/students/:id", controllers.GetStudent)
+			admin.PATCH("/students/:id/status", controllers.UpdateStatus)
+			admin.GET("/students/:id/files/:kind", controllers.DownloadStudentDocument)
+		}
 	}
+
+	SetupFrontendRoutes(router)
 }
