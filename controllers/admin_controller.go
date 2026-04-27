@@ -117,6 +117,41 @@ func UpdateStatus(c *gin.Context) {
 	})
 }
 
+func DeleteStudent(c *gin.Context) {
+	studentID, err := strconv.Atoi(c.Param("id"))
+	if err != nil || studentID <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "ID mahasiswa tidak valid.",
+		})
+		return
+	}
+
+	student, err := findStudentByID(uint(studentID))
+	if err != nil {
+		renderStudentLookupError(c, err)
+		return
+	}
+
+	documentPaths := []string{student.Photo, student.KTP, student.Ijazah}
+	studentName := student.Name
+	deletedStudentID := student.ID
+
+	if err := config.DB.Delete(student).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Gagal menghapus data mahasiswa.",
+		})
+		return
+	}
+
+	cleanupUploadedFiles(documentPaths...)
+
+	c.JSON(http.StatusOK, gin.H{
+		"message":     "Data mahasiswa berhasil dihapus.",
+		"studentId":   deletedStudentID,
+		"studentName": studentName,
+	})
+}
+
 func DownloadStudentDocument(c *gin.Context) {
 	studentID, err := strconv.Atoi(c.Param("id"))
 	if err != nil || studentID <= 0 {

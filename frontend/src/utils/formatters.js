@@ -1,8 +1,23 @@
 export function formatDate(value) {
-  return new Intl.DateTimeFormat("id-ID", {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "-";
+  }
+
+  const datePart = new Intl.DateTimeFormat("id-ID", {
     dateStyle: "medium",
-    timeStyle: "short",
-  }).format(new Date(value));
+  }).format(date);
+
+  const timePart = new Intl.DateTimeFormat("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  })
+    .format(date)
+    .replace(":", ".");
+
+  return `${datePart}, ${timePart}`;
 }
 
 export function formatFileSize(bytes) {

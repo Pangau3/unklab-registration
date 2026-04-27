@@ -11,6 +11,7 @@
   overflow: hidden;
   border-radius: 28px;
   box-shadow: var(--shadow-lg);
+  scroll-margin-top: 110px;
 }
 
 .showcase-hero {

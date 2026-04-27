@@ -133,6 +133,12 @@ a:focus-visible {
     rgba(255, 255, 255, 0.92);
   box-shadow: 0 14px 36px rgba(98, 38, 100, 0.12);
   backdrop-filter: blur(18px);
+  transition:
+    border-color 0.28s ease,
+    background 0.32s ease,
+    box-shadow 0.32s ease,
+    transform 0.28s ease,
+    opacity 0.28s ease;
 }
 
 .topbar-home {
@@ -154,6 +160,7 @@ a:focus-visible {
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+  transition: color 0.28s ease, transform 0.28s ease;
 }
 
 .brand-logo {
@@ -176,6 +183,7 @@ a:focus-visible {
   align-items: center;
   gap: 10px;
   color: #6e4a75;
+  transition: color 0.28s ease;
 }
 
 .topnav a {
@@ -212,6 +220,11 @@ a:focus-visible {
   max-width: 1240px;
 }
 
+.page-admin-login {
+  max-width: none;
+  width: 100%;
+}
+
 .page-home,
 .site-footer-home {
   max-width: 1320px;
@@ -227,6 +240,66 @@ a:focus-visible {
   padding: 0 4px 18px;
   color: var(--text-muted);
   font-size: 0.95rem;
+  transition: color 0.28s ease, opacity 0.28s ease, transform 0.28s ease;
+}
+
+.page-transition-shell {
+  position: relative;
+  will-change: transform, opacity, filter;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .page-transition-shell {
+    animation: page-stage-enter 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+    transform-origin: top center;
+  }
+
+  .page-transition-shell::before {
+    content: "";
+    position: absolute;
+    inset: -16px 0 auto;
+    height: 120px;
+    pointer-events: none;
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.2),
+      rgba(255, 255, 255, 0)
+    );
+    opacity: 0;
+    animation: page-stage-sheen 0.7s ease-out;
+  }
+
+  .page-transition-home {
+    animation-duration: 0.62s;
+  }
+
+  .page-transition-admin {
+    animation-duration: 0.48s;
+  }
+
+  .topbar {
+    animation: chrome-settle 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .site-footer {
+    animation: chrome-fade 0.45s ease-out;
+  }
+}
+
+@supports (view-transition-name: none) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 0.42s;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  ::view-transition-old(root) {
+    animation-name: route-view-out;
+  }
+
+  ::view-transition-new(root) {
+    animation-name: route-view-in;
+  }
 }
 
 .site-footer-home {
@@ -324,7 +397,8 @@ a:focus-visible {
 .secondary-button,
 .ghost-button,
 .approve-button,
-.reject-button {
+.reject-button,
+.delete-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -343,7 +417,8 @@ a:focus-visible {
 .secondary-button:hover,
 .ghost-button:hover,
 .approve-button:hover,
-.reject-button:hover {
+.reject-button:hover,
+.delete-button:hover {
   transform: translateY(-1px);
 }
 
@@ -381,11 +456,17 @@ a:focus-visible {
   background: linear-gradient(135deg, #b63f63, #db6a8b);
 }
 
+.delete-button {
+  color: #ffffff;
+  background: linear-gradient(135deg, #7b1327, #bf3e5b);
+}
+
 .primary-button:disabled,
 .secondary-button:disabled,
 .ghost-button:disabled,
 .approve-button:disabled,
-.reject-button:disabled {
+.reject-button:disabled,
+.delete-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
   transform: none;
@@ -489,6 +570,92 @@ a:focus-visible {
 @keyframes spin {
   to {
     transform: rotate(360deg);
+  }
+}
+
+@keyframes page-stage-enter {
+  0% {
+    opacity: 0;
+    transform: translateY(24px) scale(0.986);
+    filter: blur(12px);
+  }
+
+  55% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes page-stage-sheen {
+  0% {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  30% {
+    opacity: 0.55;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes chrome-settle {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes chrome-fade {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes route-view-out {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(0.992);
+    filter: blur(8px);
+  }
+}
+
+@keyframes route-view-in {
+  0% {
+    opacity: 0;
+    transform: scale(1.008);
+    filter: blur(10px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
   }
 }
 

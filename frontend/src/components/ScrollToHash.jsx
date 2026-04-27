@@ -10,10 +10,20 @@ function ScrollToHash() {
       return;
     }
 
-    const target = document.querySelector(location.hash);
-    if (target) {
-      target.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
+    const scrollToTarget = () => {
+      const target = document.querySelector(location.hash);
+      if (target instanceof HTMLElement) {
+        target.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    };
+
+    const frameId = window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(scrollToTarget);
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+    };
   }, [location.hash, location.pathname]);
 
   return null;

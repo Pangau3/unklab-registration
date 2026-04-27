@@ -1,6 +1,7 @@
 import { useDeferredValue, useEffect, useState } from "react";
 import {
   buildDocumentUrl,
+  deleteStudent,
   fetchStudentDetail,
   fetchStudents,
   updateStudentStatus,
@@ -129,6 +130,46 @@ function AdminDashboard({ user, onLogout, onSessionExpired }) {
       }
 
       setError(updateError.message);
+    } finally {
+      setActionState("");
+    }
+  }
+
+  async function handleDeleteStudent(student) {
+    const confirmed = window.confirm(
+      `Hapus data pendaftaran ${student.name}? Tindakan ini akan menghapus data pendaftar beserta dokumen yang sudah diunggah.`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setActionState(`${student.id}:delete`);
+    setError("");
+    setDetailError("");
+    setSuccess("");
+
+    try {
+      const payload = await deleteStudent(student.id);
+      const nextStudents = students.filter((entry) => entry.id !== student.id);
+
+      setStudents(nextStudents);
+      setSummary(countStudents(nextStudents));
+
+      if (selectedStudentId === student.id) {
+        closeDetailDrawer();
+      }
+
+      setSuccess(
+        `Data pendaftar ${payload.studentName || student.name} berhasil dihapus.`
+      );
+    } catch (deleteError) {
+      if (deleteError.status === 401) {
+        onSessionExpired();
+        return;
+      }
+
+      setError(deleteError.message);
     } finally {
       setActionState("");
     }
@@ -393,6 +434,14 @@ function AdminDashboard({ user, onLogout, onSessionExpired }) {
                           >
                             Reject
                           </button>
+                          <button
+                            className="delete-button small-button"
+                            disabled={actionState === `${student.id}:delete`}
+                            onClick={() => handleDeleteStudent(student)}
+                            type="button"
+                          >
+                            Hapus
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -436,6 +485,7 @@ function AdminDashboard({ user, onLogout, onSessionExpired }) {
         ) : selectedStudent ? (
           <StudentDetailPanel
             actionState={actionState}
+            onDeleteStudent={handleDeleteStudent}
             onStatusUpdate={handleStatusUpdate}
             student={selectedStudent}
           />
@@ -453,7 +503,7 @@ function AdminDashboard({ user, onLogout, onSessionExpired }) {
   );
 }
 
-function StudentDetailPanel({ actionState, onStatusUpdate, student }) {
+function StudentDetailPanel({ actionState, onDeleteStudent, onStatusUpdate, student }) {
   const documents = [
     { key: "photo", label: "Foto", ...student.documents.photo },
     { key: "ktp", label: "KTP", ...student.documents.ktp },
@@ -588,6 +638,14 @@ function StudentDetailPanel({ actionState, onStatusUpdate, student }) {
           type="button"
         >
           Kembalikan ke Pending
+        </button>
+        <button
+          className="delete-button"
+          disabled={actionState === `${student.id}:delete`}
+          onClick={() => onDeleteStudent(student)}
+          type="button"
+        >
+          Hapus Pendaftaran
         </button>
       </div>
     </div>

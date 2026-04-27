@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import TransitionLink from "../components/TransitionLink";
 import { PROGRAMS, REGISTRATION_DOCUMENTS } from "../registrationConfig";
 
 const HOME_FEATURES = [
@@ -93,9 +93,9 @@ function HomePage() {
           </p>
 
           <div className="showcase-actions single">
-            <Link className="primary-button" to="/register">
+            <TransitionLink className="primary-button" to="/register">
               Daftar Sekarang
-            </Link>
+            </TransitionLink>
           </div>
 
           <div className="showcase-metrics">
@@ -214,9 +214,9 @@ function HomePage() {
           </div>
 
           <div className="showcase-actions single">
-            <Link className="primary-button" to="/register">
+            <TransitionLink className="primary-button" to="/register">
               Daftar Sekarang
-            </Link>
+            </TransitionLink>
           </div>
         </article>
       </section>

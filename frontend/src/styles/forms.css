@@ -1,3 +1,283 @@
+.register-dashboard {
+  display: grid;
+  gap: 28px;
+}
+
+.register-hero {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 0.9fr);
+  gap: 34px;
+  min-height: 520px;
+  padding: 40px 42px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 28px;
+  background:
+    linear-gradient(118deg, rgba(40, 11, 57, 0.92) 0%, rgba(109, 25, 109, 0.8) 55%, rgba(181, 163, 0, 0.28) 100%),
+    linear-gradient(180deg, rgba(18, 8, 30, 0.34), rgba(18, 8, 30, 0.12));
+  box-shadow: 0 34px 90px rgba(45, 16, 60, 0.18);
+}
+
+.register-hero::before {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  inset: 0;
+  background:
+    radial-gradient(circle at 16% 18%, rgba(255, 255, 255, 0.08), transparent 24%),
+    radial-gradient(circle at 82% 14%, rgba(255, 255, 255, 0.08), transparent 18%);
+}
+
+.register-hero::after {
+  content: "";
+  position: absolute;
+  right: -80px;
+  bottom: -120px;
+  width: 320px;
+  height: 320px;
+  border-radius: 999px;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.16), transparent 66%);
+  filter: blur(16px);
+}
+
+.register-hero-copy,
+.register-hero-panel {
+  position: relative;
+  z-index: 1;
+}
+
+.register-hero-copy {
+  display: grid;
+  align-content: start;
+  gap: 18px;
+  color: #ffffff;
+}
+
+.register-back-link {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 10px 14px;
+  border-radius: 999px;
+  color: rgba(255, 255, 255, 0.92);
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  transition: background 0.2s ease, transform 0.2s ease, color 0.2s ease;
+}
+
+.register-back-link:hover {
+  transform: translateY(-1px);
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.register-hero-badge {
+  margin-bottom: 0;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.register-hero h1 {
+  margin: 0;
+  max-width: 12ch;
+  color: #ffffff;
+  font-size: clamp(2.9rem, 4.6vw, 4.6rem);
+  line-height: 0.96;
+  letter-spacing: -0.06em;
+  text-shadow: 0 12px 34px rgba(24, 7, 35, 0.22);
+}
+
+.register-hero h1 span {
+  color: #f1d96c;
+}
+
+.register-hero p {
+  max-width: 560px;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.84);
+  font-size: 1.04rem;
+  line-height: 1.72;
+}
+
+.register-hero-divider {
+  display: inline-block;
+  width: 180px;
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #d7c52c, rgba(215, 197, 44, 0.14));
+  box-shadow: 0 0 24px rgba(215, 197, 44, 0.22);
+}
+
+.register-hero-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  max-width: 420px;
+}
+
+.register-hero-metric {
+  display: grid;
+  gap: 8px;
+  padding: 16px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 18px;
+  background: rgba(40, 14, 54, 0.24);
+  box-shadow: 0 20px 42px rgba(26, 8, 39, 0.12);
+  backdrop-filter: blur(10px);
+}
+
+.register-hero-metric strong {
+  color: #ffffff;
+  font-size: clamp(1.8rem, 3vw, 2.4rem);
+  line-height: 0.96;
+}
+
+.register-hero-metric span {
+  color: rgba(255, 255, 255, 0.72);
+  font-weight: 500;
+}
+
+.register-hero-panel {
+  position: relative;
+  display: grid;
+  align-content: center;
+}
+
+.register-hero-window {
+  position: relative;
+  overflow: hidden;
+  min-height: 450px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 28px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(249, 244, 251, 0.94)),
+    rgba(255, 255, 255, 0.96);
+  box-shadow:
+    0 30px 70px rgba(25, 8, 36, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(18px);
+}
+
+.register-hero-window::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 22px;
+  right: 22px;
+  height: 5px;
+  border-radius: 0 0 999px 999px;
+  background: linear-gradient(90deg, rgba(122, 27, 111, 0.92), rgba(213, 196, 32, 0.95));
+}
+
+.register-hero-window-bar {
+  display: flex;
+  gap: 8px;
+  padding: 18px 20px;
+  border-bottom: 1px solid rgba(122, 27, 111, 0.08);
+  background: linear-gradient(180deg, rgba(248, 242, 250, 0.98), rgba(255, 255, 255, 0.96));
+}
+
+.register-hero-window-bar span {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(122, 27, 111, 0.18);
+}
+
+.register-hero-window-bar span:first-child {
+  background: rgba(213, 84, 120, 0.58);
+}
+
+.register-hero-window-bar span:nth-child(2) {
+  background: rgba(181, 163, 0, 0.6);
+}
+
+.register-hero-window-bar span:nth-child(3) {
+  background: rgba(122, 27, 111, 0.4);
+}
+
+.register-hero-window-body {
+  display: grid;
+  gap: 18px;
+  padding: 24px;
+  background:
+    radial-gradient(circle at top right, rgba(181, 163, 0, 0.08), transparent 24%),
+    linear-gradient(180deg, rgba(250, 245, 251, 0.96), rgba(255, 255, 255, 0.98));
+}
+
+.register-hero-window-banner {
+  display: grid;
+  align-content: end;
+  gap: 12px;
+  min-height: 220px;
+  padding: 28px;
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at top right, rgba(255, 255, 255, 0.14), transparent 26%),
+    linear-gradient(150deg, rgba(91, 20, 94, 0.98), rgba(164, 71, 150, 0.92));
+  box-shadow: 0 20px 46px rgba(84, 26, 85, 0.18);
+}
+
+.register-hero-window-banner span {
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 0.92rem;
+}
+
+.register-hero-window-banner strong {
+  max-width: 340px;
+  color: #ffffff;
+  font-size: 1.85rem;
+  line-height: 1.08;
+  letter-spacing: -0.05em;
+}
+
+.register-hero-window-banner p {
+  max-width: 340px;
+  color: rgba(255, 255, 255, 0.76);
+  margin: 0;
+}
+
+.register-stage-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.register-stage-item {
+  display: grid;
+  gap: 8px;
+  padding: 18px 16px;
+  border: 1px solid rgba(122, 27, 111, 0.1);
+  border-radius: 18px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(250, 243, 251, 0.9)),
+    rgba(255, 255, 255, 0.94);
+  box-shadow: var(--shadow-md);
+}
+
+.register-stage-item span {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.register-stage-item strong {
+  color: var(--text-strong);
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+.register-stage-item p {
+  margin: 0;
+  color: var(--text-muted);
+  line-height: 1.6;
+  font-size: 0.92rem;
+}
+
 .content-grid {
   display: grid;
   gap: 24px;
@@ -14,6 +294,12 @@
   top: 24px;
   display: grid;
   gap: 18px;
+}
+
+.register-aside h2 {
+  max-width: 13ch;
+  font-size: clamp(1.9rem, 2.8vw, 2.8rem);
+  line-height: 1.04;
 }
 
 .register-checklist {
@@ -66,7 +352,7 @@
 
 .register-form-header {
   gap: 10px;
-  padding: 20px 22px;
+  padding: 22px 24px;
   border: 1px solid rgba(122, 27, 111, 0.08);
   border-radius: 16px;
   background:
@@ -77,13 +363,14 @@
 .register-form-header h2 {
   margin: 10px 0 0;
   color: var(--text-strong);
-  font-size: clamp(1.5rem, 2.3vw, 2.2rem);
-  line-height: 1.12;
+  max-width: 14ch;
+  font-size: clamp(1.7rem, 2.5vw, 2.45rem);
+  line-height: 1.08;
 }
 
 .form-section {
   gap: 18px;
-  padding: 22px;
+  padding: 24px;
   border: 1px solid rgba(122, 27, 111, 0.08);
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.82);
@@ -96,7 +383,7 @@
 
 .form-section-header strong {
   color: var(--text-strong);
-  font-size: 1rem;
+  font-size: 1.02rem;
 }
 
 .form-row {
@@ -119,6 +406,7 @@
   gap: 14px;
   grid-template-columns: 1fr auto;
   align-items: center;
+  padding-top: 6px;
 }
 
 .field {
@@ -291,6 +579,93 @@
   gap: 6px;
 }
 
+.file-upload-extra-actions {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.file-preview-button,
+.file-preview-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(122, 27, 111, 0.16);
+  border-radius: 10px;
+  padding: 10px 14px;
+  color: var(--brand-primary);
+  font-size: 0.9rem;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.96);
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.file-preview-button:hover,
+.file-preview-close:hover {
+  transform: translateY(-1px);
+  border-color: rgba(122, 27, 111, 0.28);
+  box-shadow: 0 10px 22px rgba(84, 26, 85, 0.08);
+}
+
+.file-preview-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(21, 10, 32, 0.58);
+  backdrop-filter: blur(8px);
+}
+
+.file-preview-dialog {
+  display: grid;
+  gap: 16px;
+  width: min(100%, 720px);
+  padding: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 18px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(249, 242, 251, 0.96)),
+    rgba(255, 255, 255, 0.96);
+  box-shadow: 0 30px 70px rgba(24, 10, 36, 0.28);
+}
+
+.file-preview-topbar {
+  display: grid;
+  gap: 4px;
+  color: var(--text-strong);
+}
+
+.file-preview-topbar span {
+  color: var(--text-muted);
+  font-size: 0.92rem;
+  word-break: break-word;
+}
+
+.file-preview-close {
+  justify-self: end;
+}
+
+.file-preview-dialog iframe,
+.file-preview-dialog img {
+  display: block;
+  width: 100%;
+  max-height: 72vh;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.file-preview-dialog img {
+  object-fit: contain;
+}
+
+.file-preview-dialog iframe {
+  min-height: min(72vh, 840px);
+  border: 0;
+}
+
 .file-upload-footer .field-help {
   margin: 0;
 }
@@ -337,6 +712,7 @@
 }
 
 @media (max-width: 1100px) {
+  .register-hero,
   .content-grid {
     grid-template-columns: 1fr;
   }
@@ -344,15 +720,62 @@
   .register-aside {
     position: static;
   }
+
+  .register-hero {
+    min-height: auto;
+  }
+
+  .register-hero h1 {
+    max-width: none;
+  }
+
+  .register-hero-window {
+    min-height: auto;
+  }
+
+  .register-stage-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 720px) {
+  .register-dashboard {
+    gap: 20px;
+  }
+
+  .register-hero {
+    gap: 28px;
+    padding: 24px 20px;
+    border-radius: 20px;
+  }
+
+  .register-hero-divider {
+    width: 150px;
+  }
+
+  .register-hero-window::before {
+    left: 16px;
+    right: 16px;
+  }
+
+  .register-hero-window-body,
+  .register-hero-window-banner {
+    padding: 22px;
+  }
+
+  .register-hero-metrics,
+  .register-stage-list,
   .form-row.two-column {
     grid-template-columns: 1fr;
   }
 
   .register-submit-row {
     grid-template-columns: 1fr;
+  }
+
+  .register-form-header h2,
+  .register-aside h2 {
+    max-width: none;
   }
 
   .file-upload-card {

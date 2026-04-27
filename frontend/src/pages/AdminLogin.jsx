@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { loginAdmin } from "../api";
 import loginCampus from "../assets/login-campus.jpg";
 import logoUnklab from "../assets/logo-unklab.png";
+import TransitionLink from "../components/TransitionLink";
 import {
   clearFieldError,
   createEmptyLoginForm,
@@ -57,10 +58,10 @@ function AdminLogin({ onLogin }) {
     >
       <div className="login-layout">
         <section className="login-hero-panel">
-          <Link className="login-brand-pill" to="/">
+          <TransitionLink className="login-brand-pill" to="/">
             <img alt="Logo Universitas Klabat" className="login-brand-logo" src={logoUnklab} />
             <span>UNKLAB REGISTRATION</span>
-          </Link>
+          </TransitionLink>
 
           <div className="login-hero-copy">
             <span className="login-kicker">Portal Administrasi Pendaftaran</span>

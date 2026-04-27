@@ -30,6 +30,7 @@ func SetupRoutes(router *gin.Engine) {
 			admin.GET("/students", controllers.ListStudents)
 			admin.GET("/students/:id", controllers.GetStudent)
 			admin.PATCH("/students/:id/status", controllers.UpdateStatus)
+			admin.DELETE("/students/:id", controllers.DeleteStudent)
 			admin.GET("/students/:id/files/:kind", controllers.DownloadStudentDocument)
 		}
 	}

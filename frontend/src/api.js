@@ -84,6 +84,12 @@ export async function updateStudentStatus(id, status) {
   });
 }
 
+export async function deleteStudent(id) {
+  return request(`/api/admin/students/${id}`, {
+    method: "DELETE",
+  });
+}
+
 export function buildDocumentUrl(path) {
   return buildApiUrl(path);
 }

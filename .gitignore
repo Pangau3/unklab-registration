@@ -5,6 +5,7 @@ storage/uploads/
 .env
 frontend/.env
 .dev-session.json
+.tmp-*
 server.out.log
 server.err.log
 server.pid
