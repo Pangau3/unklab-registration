@@ -10,6 +10,7 @@ import (
 	"net/mail"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 	"unklab-registration/config"
@@ -147,6 +148,60 @@ func RegisterStudent(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "Pendaftaran berhasil dikirim dan sedang menunggu verifikasi admin.",
 		"student": buildStudentResponse(student),
+	})
+}
+
+func CheckStudentStatus(c *gin.Context) {
+	email := strings.TrimSpace(strings.ToLower(c.Query("email")))
+	idParam := strings.TrimSpace(c.Query("id"))
+
+	if email == "" && idParam == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Masukkan email atau ID pendaftar untuk memeriksa status.",
+		})
+		return
+	}
+
+	var student models.Student
+	query := config.DB
+
+	if idParam != "" {
+		studentID, err := strconv.Atoi(idParam)
+		if err != nil || studentID <= 0 {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": "Format ID pendaftar tidak valid.",
+			})
+			return
+		}
+		query = query.Where("id = ?", studentID)
+	}
+
+	if email != "" {
+		query = query.Where("email = ?", email)
+	}
+
+	if err := query.First(&student).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{
+				"error": "Data pendaftaran tidak ditemukan. Pastikan email atau ID yang dimasukkan benar.",
+			})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Gagal memeriksa status pendaftaran.",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"student": gin.H{
+			"id":        student.ID,
+			"name":      student.Name,
+			"email":     student.Email,
+			"program":   student.Program,
+			"status":    student.Status,
+			"createdAt": student.CreatedAt,
+		},
 	})
 }
 

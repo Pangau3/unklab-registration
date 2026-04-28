@@ -965,3 +965,70 @@ tbody tr.is-selected {
     border-radius: 14px;
   }
 }
+
+/* ─── Bulk Actions Bar ──────────────────────────────────────── */
+.bulk-actions-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 16px 22px;
+  border: 1px solid rgba(122, 27, 111, 0.16);
+  border-radius: 16px;
+  background:
+    linear-gradient(135deg, rgba(244, 234, 248, 0.96), rgba(236, 220, 244, 0.92)),
+    rgba(255, 255, 255, 0.96);
+  box-shadow: 0 8px 24px rgba(45, 16, 60, 0.08);
+  animation: dashboardRise 0.3s ease both;
+}
+
+.bulk-actions-bar > span {
+  color: var(--brand-primary-deep);
+  font-weight: 600;
+  font-size: 0.94rem;
+}
+
+.bulk-actions-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ─── Sortable Headers ──────────────────────────────────────── */
+.sortable-th {
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.2s ease;
+}
+
+.sortable-th:hover {
+  color: var(--brand-primary);
+}
+
+.sort-indicator {
+  font-size: 0.78rem;
+  opacity: 0.4;
+  transition: opacity 0.2s ease;
+}
+
+.sort-indicator.is-active {
+  opacity: 1;
+  color: var(--brand-primary);
+}
+
+/* ─── Checkbox in Table ─────────────────────────────────────── */
+table input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--brand-primary);
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+/* ─── Table Scroll ──────────────────────────────────────────── */
+.table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+

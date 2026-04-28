@@ -1,7 +1,9 @@
 package controllers
 
 import (
+	"encoding/csv"
 	"errors"
+	"fmt"
 	"net/http"
 	"os"
 	"strconv"
@@ -14,6 +16,11 @@ import (
 )
 
 type updateStatusRequest struct {
+	Status string `json:"status"`
+}
+
+type bulkUpdateStatusRequest struct {
+	IDs    []uint `json:"ids"`
 	Status string `json:"status"`
 }
 
@@ -115,6 +122,90 @@ func UpdateStatus(c *gin.Context) {
 		"message": "Status mahasiswa berhasil diperbarui.",
 		"student": buildStudentResponse(*student),
 	})
+}
+
+func BulkUpdateStatus(c *gin.Context) {
+	var request bulkUpdateStatusRequest
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Format permintaan tidak valid.",
+		})
+		return
+	}
+
+	status := strings.TrimSpace(request.Status)
+	if status != "Pending" && status != "Approved" && status != "Rejected" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Status harus Pending, Approved, atau Rejected.",
+		})
+		return
+	}
+
+	if len(request.IDs) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Pilih setidaknya satu pendaftar.",
+		})
+		return
+	}
+
+	if len(request.IDs) > 100 {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Maksimal 100 pendaftar per batch.",
+		})
+		return
+	}
+
+	result := config.DB.Model(&models.Student{}).Where("id IN ?", request.IDs).Update("status", status)
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Gagal memperbarui status secara batch.",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": fmt.Sprintf("%d pendaftar berhasil diperbarui ke status %s.", result.RowsAffected, status),
+		"updated": result.RowsAffected,
+	})
+}
+
+func ExportStudentsCSV(c *gin.Context) {
+	var students []models.Student
+	if err := config.DB.Order("created_at DESC").Find(&students).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Gagal mengambil data pendaftar untuk export.",
+		})
+		return
+	}
+
+	c.Header("Content-Type", "text/csv; charset=utf-8")
+	c.Header("Content-Disposition", "attachment; filename=pendaftar-unklab.csv")
+
+	writer := csv.NewWriter(c.Writer)
+	defer writer.Flush()
+
+	header := []string{"ID", "Nama", "Email", "Telepon", "Alamat", "Asal Sekolah", "Tanggal Lahir", "Program Studi", "Status", "Tanggal Daftar"}
+	if err := writer.Write(header); err != nil {
+		return
+	}
+
+	for _, student := range students {
+		row := []string{
+			strconv.FormatUint(uint64(student.ID), 10),
+			student.Name,
+			student.Email,
+			student.Phone,
+			student.Address,
+			student.PreviousSchool,
+			student.BirthDate,
+			student.Program,
+			student.Status,
+			student.CreatedAt.Format("2006-01-02 15:04:05"),
+		}
+		if err := writer.Write(row); err != nil {
+			return
+		}
+	}
 }
 
 func DeleteStudent(c *gin.Context) {

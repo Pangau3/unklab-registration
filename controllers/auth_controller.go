@@ -94,3 +94,78 @@ func Me(c *gin.Context) {
 		},
 	})
 }
+
+type changePasswordRequest struct {
+	CurrentPassword string `json:"currentPassword"`
+	NewPassword     string `json:"newPassword"`
+}
+
+func ChangePassword(c *gin.Context) {
+	currentUser, ok := middleware.CurrentUser(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "Sesi login tidak ditemukan.",
+		})
+		return
+	}
+
+	var request changePasswordRequest
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Format permintaan tidak valid.",
+		})
+		return
+	}
+
+	request.CurrentPassword = strings.TrimSpace(request.CurrentPassword)
+	request.NewPassword = strings.TrimSpace(request.NewPassword)
+
+	if request.CurrentPassword == "" || request.NewPassword == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Password lama dan password baru wajib diisi.",
+		})
+		return
+	}
+
+	if len(request.NewPassword) < 6 {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Password baru minimal 6 karakter.",
+		})
+		return
+	}
+
+	var user models.User
+	if err := config.DB.Where("username = ?", currentUser.Username).First(&user).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Gagal mengambil data pengguna.",
+		})
+		return
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(request.CurrentPassword)); err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "Password lama tidak sesuai.",
+		})
+		return
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(request.NewPassword), bcrypt.DefaultCost)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Gagal memproses password baru.",
+		})
+		return
+	}
+
+	user.Password = string(hashedPassword)
+	if err := config.DB.Save(&user).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Gagal menyimpan password baru.",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Password berhasil diubah.",
+	})
+}

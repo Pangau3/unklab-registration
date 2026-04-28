@@ -1,14 +1,19 @@
 import { useDeferredValue, useEffect, useState } from "react";
 import {
   buildDocumentUrl,
+  bulkUpdateStudentStatus,
   deleteStudent,
+  exportStudentsCSV,
   fetchStudentDetail,
   fetchStudents,
   updateStudentStatus,
 } from "../api";
 import logoUnklab from "../assets/logo-unklab.png";
+import ChangePasswordModal from "../components/ChangePasswordModal";
+import DetailItem from "../components/DetailItem";
 import DocumentLink from "../components/DocumentLink";
-import LoadingPanel from "../components/LoadingPanel";
+import SkeletonTable from "../components/SkeletonTable";
+import SummaryCard from "../components/SummaryCard";
 import { STATUS_FILTER_OPTIONS } from "../registrationConfig";
 import { formatBirthDate, formatDate } from "../utils/formatters";
 import {
@@ -34,6 +39,17 @@ function AdminDashboard({ user, onLogout, onSessionExpired }) {
   const [actionState, setActionState] = useState("");
   const deferredQuery = useDeferredValue(query);
 
+  // Sort state
+  const [sortField, setSortField] = useState("createdAt");
+  const [sortDirection, setSortDirection] = useState("desc");
+
+  // Bulk selection
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [bulkActionState, setBulkActionState] = useState("");
+
+  // Change password modal
+  const [showChangePassword, setShowChangePassword] = useState(false);
+
   useEffect(() => {
     loadStudents();
   }, []);
@@ -49,9 +65,7 @@ function AdminDashboard({ user, onLogout, onSessionExpired }) {
       setSummary(payload.summary || countStudents(payload.students));
       setLastLoadedAt(new Date().toISOString());
 
-      if (!selectedStudentId) {
-        return;
-      }
+      if (!selectedStudentId) return;
 
       const nextSelectedStudent = payload.students.find(
         (student) => student.id === selectedStudentId
@@ -64,19 +78,13 @@ function AdminDashboard({ user, onLogout, onSessionExpired }) {
       }
 
       setSelectedStudent((currentStudent) =>
-        currentStudent
-          ? {
-              ...currentStudent,
-              ...nextSelectedStudent,
-            }
-          : nextSelectedStudent
+        currentStudent ? { ...currentStudent, ...nextSelectedStudent } : nextSelectedStudent
       );
     } catch (loadError) {
       if (loadError.status === 401) {
         onSessionExpired();
         return;
       }
-
       setError(loadError.message);
     } finally {
       setIsLoading(false);
@@ -96,7 +104,6 @@ function AdminDashboard({ user, onLogout, onSessionExpired }) {
         onSessionExpired();
         return;
       }
-
       setDetailError(loadError.message);
       setSelectedStudent(null);
     } finally {
@@ -128,7 +135,6 @@ function AdminDashboard({ user, onLogout, onSessionExpired }) {
         onSessionExpired();
         return;
       }
-
       setError(updateError.message);
     } finally {
       setActionState("");
@@ -140,9 +146,7 @@ function AdminDashboard({ user, onLogout, onSessionExpired }) {
       `Hapus data pendaftaran ${student.name}? Tindakan ini akan menghapus data pendaftar beserta dokumen yang sudah diunggah.`
     );
 
-    if (!confirmed) {
-      return;
-    }
+    if (!confirmed) return;
 
     setActionState(`${student.id}:delete`);
     setError("");
@@ -160,18 +164,64 @@ function AdminDashboard({ user, onLogout, onSessionExpired }) {
         closeDetailDrawer();
       }
 
-      setSuccess(
-        `Data pendaftar ${payload.studentName || student.name} berhasil dihapus.`
-      );
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(student.id);
+        return next;
+      });
+
+      setSuccess(`Data pendaftar ${payload.studentName || student.name} berhasil dihapus.`);
     } catch (deleteError) {
       if (deleteError.status === 401) {
         onSessionExpired();
         return;
       }
-
       setError(deleteError.message);
     } finally {
       setActionState("");
+    }
+  }
+
+  async function handleBulkAction(status) {
+    if (selectedIds.size === 0) return;
+
+    const confirmed = window.confirm(
+      `Ubah status ${selectedIds.size} pendaftar menjadi ${status}?`
+    );
+    if (!confirmed) return;
+
+    setBulkActionState(status);
+    setError("");
+    setSuccess("");
+
+    try {
+      const payload = await bulkUpdateStudentStatus([...selectedIds], status);
+      setSuccess(payload.message);
+      setSelectedIds(new Set());
+      await loadStudents();
+    } catch (err) {
+      if (err.status === 401) {
+        onSessionExpired();
+        return;
+      }
+      setError(err.message);
+    } finally {
+      setBulkActionState("");
+    }
+  }
+
+  async function handleExportCSV() {
+    try {
+      const blob = await exportStudentsCSV();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "pendaftar-unklab.csv";
+      a.click();
+      URL.revokeObjectURL(url);
+      setSuccess("Data berhasil diexport ke CSV.");
+    } catch (err) {
+      setError(err.message);
     }
   }
 
@@ -181,19 +231,61 @@ function AdminDashboard({ user, onLogout, onSessionExpired }) {
     setDetailError("");
   }
 
-  const filteredStudents = students.filter((student) => {
-    const normalizedQuery = deferredQuery.toLowerCase().trim();
-    const matchesQuery =
-      normalizedQuery === "" ||
-      student.name.toLowerCase().includes(normalizedQuery) ||
-      student.email.toLowerCase().includes(normalizedQuery) ||
-      student.program.toLowerCase().includes(normalizedQuery) ||
-      student.phone.toLowerCase().includes(normalizedQuery) ||
-      student.previousSchool.toLowerCase().includes(normalizedQuery);
+  function handleSort(field) {
+    if (sortField === field) {
+      setSortDirection((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortField(field);
+      setSortDirection("asc");
+    }
+  }
 
-    const matchesStatus = statusFilter === "All" || student.status === statusFilter;
-    return matchesQuery && matchesStatus;
-  });
+  function toggleSelectAll(checked) {
+    if (checked) {
+      setSelectedIds(new Set(filteredStudents.map((s) => s.id)));
+    } else {
+      setSelectedIds(new Set());
+    }
+  }
+
+  function toggleSelectStudent(id) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }
+
+  const filteredStudents = students
+    .filter((student) => {
+      const normalizedQuery = deferredQuery.toLowerCase().trim();
+      const matchesQuery =
+        normalizedQuery === "" ||
+        student.name.toLowerCase().includes(normalizedQuery) ||
+        student.email.toLowerCase().includes(normalizedQuery) ||
+        student.program.toLowerCase().includes(normalizedQuery) ||
+        student.phone.toLowerCase().includes(normalizedQuery) ||
+        student.previousSchool.toLowerCase().includes(normalizedQuery);
+
+      const matchesStatus = statusFilter === "All" || student.status === statusFilter;
+      return matchesQuery && matchesStatus;
+    })
+    .sort((a, b) => {
+      let aVal = a[sortField];
+      let bVal = b[sortField];
+      if (typeof aVal === "string") aVal = aVal.toLowerCase();
+      if (typeof bVal === "string") bVal = bVal.toLowerCase();
+      if (aVal < bVal) return sortDirection === "asc" ? -1 : 1;
+      if (aVal > bVal) return sortDirection === "asc" ? 1 : -1;
+      return 0;
+    });
+
+  const allFilteredSelected =
+    filteredStudents.length > 0 && filteredStudents.every((s) => selectedIds.has(s.id));
 
   return (
     <section className="dashboard-shell">
@@ -204,11 +296,7 @@ function AdminDashboard({ user, onLogout, onSessionExpired }) {
         <div className="dashboard-header-main">
           <div className="dashboard-brand-lockup">
             <div className="dashboard-brand-mark">
-              <img
-                alt="Logo Universitas Klabat"
-                className="dashboard-brand-logo"
-                src={logoUnklab}
-              />
+              <img alt="Logo Universitas Klabat" className="dashboard-brand-logo" src={logoUnklab} />
             </div>
 
             <div className="dashboard-brand-copy">
@@ -218,8 +306,8 @@ function AdminDashboard({ user, onLogout, onSessionExpired }) {
               </div>
               <h2>Kelola approval pendaftar</h2>
               <p>
-                Login sebagai {user.username}. Review dokumen, ubah status, dan
-                pantau antrean verifikasi dalam satu dashboard administrasi.
+                Login sebagai {user.username}. Review dokumen, ubah status, dan pantau antrean
+                verifikasi dalam satu dashboard administrasi.
               </p>
             </div>
           </div>
@@ -240,8 +328,14 @@ function AdminDashboard({ user, onLogout, onSessionExpired }) {
         </div>
 
         <div className="dashboard-actions">
+          <button className="secondary-button" onClick={handleExportCSV} type="button">
+            Export CSV
+          </button>
           <button className="secondary-button" onClick={loadStudents} type="button">
             Refresh
+          </button>
+          <button className="ghost-button" onClick={() => setShowChangePassword(true)} type="button">
+            Ubah Password
           </button>
           <button className="ghost-button" onClick={onLogout} type="button">
             Logout
@@ -250,30 +344,10 @@ function AdminDashboard({ user, onLogout, onSessionExpired }) {
       </div>
 
       <div className="summary-grid">
-        <SummaryCard
-          description="Seluruh pendaftar yang tercatat dalam sistem."
-          label="Total pendaftar"
-          value={summary.total}
-          variant="total"
-        />
-        <SummaryCard
-          description="Masih perlu review dan keputusan admin."
-          label="Pending"
-          value={summary.pending}
-          variant="pending"
-        />
-        <SummaryCard
-          description="Sudah disetujui dan lolos tahap verifikasi."
-          label="Approved"
-          value={summary.approved}
-          variant="approved"
-        />
-        <SummaryCard
-          description="Ditolak atau perlu tindak lanjut dokumen."
-          label="Rejected"
-          value={summary.rejected}
-          variant="rejected"
-        />
+        <SummaryCard description="Seluruh pendaftar yang tercatat dalam sistem." label="Total pendaftar" value={summary.total} variant="total" />
+        <SummaryCard description="Masih perlu review dan keputusan admin." label="Pending" value={summary.pending} variant="pending" />
+        <SummaryCard description="Sudah disetujui dan lolos tahap verifikasi." label="Approved" value={summary.approved} variant="approved" />
+        <SummaryCard description="Ditolak atau perlu tindak lanjut dokumen." label="Rejected" value={summary.rejected} variant="rejected" />
       </div>
 
       <div className="toolbar-card dashboard-filter-card">
@@ -281,8 +355,8 @@ function AdminDashboard({ user, onLogout, onSessionExpired }) {
           <span className="dashboard-panel-kicker">Pusat Kontrol</span>
           <h3>Temukan data yang perlu ditindak</h3>
           <p>
-            Cari lintas nama, email, program, nomor HP, atau asal sekolah lalu
-            sempitkan hasil berdasarkan status untuk mempercepat review.
+            Cari lintas nama, email, program, nomor HP, atau asal sekolah lalu sempitkan hasil
+            berdasarkan status untuk mempercepat review.
           </p>
         </div>
 
@@ -291,16 +365,7 @@ function AdminDashboard({ user, onLogout, onSessionExpired }) {
             <label htmlFor="search">Cari pendaftar</label>
             <div className="toolbar-input-shell">
               <span aria-hidden="true" className="toolbar-input-icon">
-                <svg
-                  fill="none"
-                  height="18"
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  viewBox="0 0 24 24"
-                  width="18"
-                >
+                <svg fill="none" height="18" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" width="18">
                   <circle cx="11" cy="11" r="7" />
                   <line x1="21" x2="16.65" y1="21" y2="16.65" />
                 </svg>
@@ -318,11 +383,7 @@ function AdminDashboard({ user, onLogout, onSessionExpired }) {
           <div className="toolbar-field narrow">
             <label htmlFor="status-filter">Filter status</label>
             <div className="toolbar-select-shell">
-              <select
-                id="status-filter"
-                onChange={(event) => setStatusFilter(event.target.value)}
-                value={statusFilter}
-              >
+              <select id="status-filter" onChange={(event) => setStatusFilter(event.target.value)} value={statusFilter}>
                 {STATUS_FILTER_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
@@ -334,11 +395,43 @@ function AdminDashboard({ user, onLogout, onSessionExpired }) {
         </div>
       </div>
 
+      {/* Bulk actions bar */}
+      {selectedIds.size > 0 ? (
+        <div className="bulk-actions-bar">
+          <span>{selectedIds.size} pendaftar dipilih</span>
+          <div className="bulk-actions-buttons">
+            <button
+              className="approve-button small-button"
+              disabled={bulkActionState === "Approved"}
+              onClick={() => handleBulkAction("Approved")}
+              type="button"
+            >
+              Bulk Approve
+            </button>
+            <button
+              className="reject-button small-button"
+              disabled={bulkActionState === "Rejected"}
+              onClick={() => handleBulkAction("Rejected")}
+              type="button"
+            >
+              Bulk Reject
+            </button>
+            <button
+              className="secondary-button small-button"
+              onClick={() => setSelectedIds(new Set())}
+              type="button"
+            >
+              Batal Pilih
+            </button>
+          </div>
+        </div>
+      ) : null}
+
       {success ? <p className="feedback success">{success}</p> : null}
       {error ? <p className="feedback error">{error}</p> : null}
 
       {isLoading ? (
-        <LoadingPanel label="Mengambil data pendaftar..." />
+        <SkeletonTable rows={6} />
       ) : (
         <div className="table-card data-table-card">
           <div className="data-table-header">
@@ -358,9 +451,17 @@ function AdminDashboard({ user, onLogout, onSessionExpired }) {
             <table>
               <thead>
                 <tr>
-                  <th>Pendaftar</th>
-                  <th>Program</th>
-                  <th>Status</th>
+                  <th style={{ width: "44px", minWidth: "44px" }}>
+                    <input
+                      checked={allFilteredSelected}
+                      onChange={(e) => toggleSelectAll(e.target.checked)}
+                      type="checkbox"
+                      aria-label="Pilih semua"
+                    />
+                  </th>
+                  <SortableHeader field="name" label="Pendaftar" onSort={handleSort} sortDirection={sortDirection} sortField={sortField} />
+                  <SortableHeader field="program" label="Program" onSort={handleSort} sortDirection={sortDirection} sortField={sortField} />
+                  <SortableHeader field="status" label="Status" onSort={handleSort} sortDirection={sortDirection} sortField={sortField} />
                   <th>Dokumen</th>
                   <th>Aksi</th>
                 </tr>
@@ -373,20 +474,22 @@ function AdminDashboard({ user, onLogout, onSessionExpired }) {
                       key={student.id}
                     >
                       <td>
+                        <input
+                          checked={selectedIds.has(student.id)}
+                          onChange={() => toggleSelectStudent(student.id)}
+                          type="checkbox"
+                          aria-label={`Pilih ${student.name}`}
+                        />
+                      </td>
+                      <td>
                         <div className="student-identity">
-                          <div
-                            aria-hidden="true"
-                            className={`student-avatar ${student.status.toLowerCase()}`}
-                          >
+                          <div aria-hidden="true" className={`student-avatar ${student.status.toLowerCase()}`}>
                             {getInitials(student.name)}
                           </div>
-
                           <div className="student-cell">
                             <strong>{student.name}</strong>
                             <span>{student.email}</span>
-                            <span className="muted-text">
-                              Dikirim {formatDate(student.createdAt)}
-                            </span>
+                            <span className="muted-text">Dikirim {formatDate(student.createdAt)}</span>
                           </div>
                         </div>
                       </td>
@@ -405,53 +508,18 @@ function AdminDashboard({ user, onLogout, onSessionExpired }) {
                       </td>
                       <td>
                         <div className="row-actions">
-                          <button
-                            className="secondary-button small-button"
-                            onClick={() => handleSelectStudent(student.id)}
-                            type="button"
-                          >
-                            Detail
-                          </button>
-                          <button
-                            className="approve-button small-button"
-                            disabled={
-                              actionState === `${student.id}:Approved` ||
-                              student.status === "Approved"
-                            }
-                            onClick={() => handleStatusUpdate(student.id, "Approved")}
-                            type="button"
-                          >
-                            Approve
-                          </button>
-                          <button
-                            className="reject-button small-button"
-                            disabled={
-                              actionState === `${student.id}:Rejected` ||
-                              student.status === "Rejected"
-                            }
-                            onClick={() => handleStatusUpdate(student.id, "Rejected")}
-                            type="button"
-                          >
-                            Reject
-                          </button>
-                          <button
-                            className="delete-button small-button"
-                            disabled={actionState === `${student.id}:delete`}
-                            onClick={() => handleDeleteStudent(student)}
-                            type="button"
-                          >
-                            Hapus
-                          </button>
+                          <button className="secondary-button small-button" onClick={() => handleSelectStudent(student.id)} type="button">Detail</button>
+                          <button className="approve-button small-button" disabled={actionState === `${student.id}:Approved` || student.status === "Approved"} onClick={() => handleStatusUpdate(student.id, "Approved")} type="button">Approve</button>
+                          <button className="reject-button small-button" disabled={actionState === `${student.id}:Rejected` || student.status === "Rejected"} onClick={() => handleStatusUpdate(student.id, "Rejected")} type="button">Reject</button>
+                          <button className="delete-button small-button" disabled={actionState === `${student.id}:delete`} onClick={() => handleDeleteStudent(student)} type="button">Hapus</button>
                         </div>
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="5">
-                      <div className="empty-state">
-                        Tidak ada data yang cocok dengan filter saat ini.
-                      </div>
+                    <td colSpan="6">
+                      <div className="empty-state">Tidak ada data yang cocok dengan filter saat ini.</div>
                     </td>
                   </tr>
                 )}
@@ -469,19 +537,17 @@ function AdminDashboard({ user, onLogout, onSessionExpired }) {
             <span className="eyebrow">Detail Pendaftaran</span>
             <h3>Review data mahasiswa</h3>
           </div>
-          <button
-            className="ghost-button small-button"
-            onClick={closeDetailDrawer}
-            type="button"
-          >
-            Tutup
-          </button>
+          <button className="ghost-button small-button" onClick={closeDetailDrawer} type="button">Tutup</button>
         </div>
 
         {detailError ? <p className="feedback error">{detailError}</p> : null}
 
         {isDetailLoading ? (
-          <LoadingPanel label="Mengambil detail pendaftaran..." />
+          <div className="detail-stack">
+            <div className="skeleton skeleton-card" style={{ minHeight: "80px" }} />
+            <div className="skeleton skeleton-card" style={{ minHeight: "160px" }} />
+            <div className="skeleton skeleton-card" style={{ minHeight: "120px" }} />
+          </div>
         ) : selectedStudent ? (
           <StudentDetailPanel
             actionState={actionState}
@@ -492,14 +558,32 @@ function AdminDashboard({ user, onLogout, onSessionExpired }) {
         ) : (
           <div className="detail-empty">
             <strong>Pilih satu pendaftar</strong>
-            <p>
-              Klik tombol <em>Detail</em> pada tabel untuk melihat dokumen,
-              metadata pendaftaran, dan aksi approval di panel ini.
-            </p>
+            <p>Klik tombol <em>Detail</em> pada tabel untuk melihat dokumen, metadata pendaftaran, dan aksi approval di panel ini.</p>
           </div>
         )}
       </aside>
+
+      {showChangePassword ? (
+        <ChangePasswordModal
+          onClose={() => setShowChangePassword(false)}
+          onSuccess={(msg) => setSuccess(msg)}
+        />
+      ) : null}
     </section>
+  );
+}
+
+/* ─── Sub-components ────────────────────────────────────────── */
+
+function SortableHeader({ field, label, onSort, sortDirection, sortField }) {
+  const isActive = sortField === field;
+  return (
+    <th className="sortable-th" onClick={() => onSort(field)} style={{ cursor: "pointer", userSelect: "none" }}>
+      {label}
+      <span className={`sort-indicator ${isActive ? "is-active" : ""}`}>
+        {isActive ? (sortDirection === "asc" ? " ↑" : " ↓") : " ↕"}
+      </span>
+    </th>
   );
 }
 
@@ -528,9 +612,7 @@ function StudentDetailPanel({ actionState, onDeleteStudent, onStatusUpdate, stud
           <strong>{student.name}</strong>
           <span>{student.email}</span>
         </div>
-        <span className={`status-pill ${student.status.toLowerCase()}`}>
-          {student.status}
-        </span>
+        <span className={`status-pill ${student.status.toLowerCase()}`}>{student.status}</span>
       </div>
 
       <div className="detail-meta">
@@ -562,14 +644,7 @@ function StudentDetailPanel({ actionState, onDeleteStudent, onStatusUpdate, stud
         <div className="document-preview-header">
           <strong>Preview dokumen</strong>
           {activeDocument ? (
-            <a
-              className="secondary-button small-button"
-              href={buildDocumentUrl(activeDocument.url)}
-              rel="noreferrer"
-              target="_blank"
-            >
-              Buka file
-            </a>
+            <a className="secondary-button small-button" href={buildDocumentUrl(activeDocument.url)} rel="noreferrer" target="_blank">Buka file</a>
           ) : null}
         </div>
 
@@ -590,17 +665,9 @@ function StudentDetailPanel({ actionState, onDeleteStudent, onStatusUpdate, stud
 
             <div className="document-preview-shell">
               {isImageDocument(activeDocument) ? (
-                <img
-                  alt={`Preview ${activeDocument.label}`}
-                  className="document-preview-image"
-                  src={buildDocumentUrl(activeDocument.url)}
-                />
+                <img alt={`Preview ${activeDocument.label}`} className="document-preview-image" src={buildDocumentUrl(activeDocument.url)} />
               ) : isPDFDocument(activeDocument) ? (
-                <iframe
-                  className="document-preview-frame"
-                  src={buildDocumentUrl(activeDocument.url)}
-                  title={`Preview ${activeDocument.label}`}
-                />
+                <iframe className="document-preview-frame" src={buildDocumentUrl(activeDocument.url)} title={`Preview ${activeDocument.label}`} />
               ) : (
                 <div className="detail-empty">
                   <strong>Preview tidak tersedia</strong>
@@ -615,61 +682,11 @@ function StudentDetailPanel({ actionState, onDeleteStudent, onStatusUpdate, stud
       </div>
 
       <div className="detail-actions">
-        <button
-          className="approve-button"
-          disabled={actionState === `${student.id}:Approved` || student.status === "Approved"}
-          onClick={() => onStatusUpdate(student.id, "Approved")}
-          type="button"
-        >
-          Approve
-        </button>
-        <button
-          className="reject-button"
-          disabled={actionState === `${student.id}:Rejected` || student.status === "Rejected"}
-          onClick={() => onStatusUpdate(student.id, "Rejected")}
-          type="button"
-        >
-          Reject
-        </button>
-        <button
-          className="secondary-button"
-          disabled={actionState === `${student.id}:Pending` || student.status === "Pending"}
-          onClick={() => onStatusUpdate(student.id, "Pending")}
-          type="button"
-        >
-          Kembalikan ke Pending
-        </button>
-        <button
-          className="delete-button"
-          disabled={actionState === `${student.id}:delete`}
-          onClick={() => onDeleteStudent(student)}
-          type="button"
-        >
-          Hapus Pendaftaran
-        </button>
+        <button className="approve-button" disabled={actionState === `${student.id}:Approved` || student.status === "Approved"} onClick={() => onStatusUpdate(student.id, "Approved")} type="button">Approve</button>
+        <button className="reject-button" disabled={actionState === `${student.id}:Rejected` || student.status === "Rejected"} onClick={() => onStatusUpdate(student.id, "Rejected")} type="button">Reject</button>
+        <button className="secondary-button" disabled={actionState === `${student.id}:Pending` || student.status === "Pending"} onClick={() => onStatusUpdate(student.id, "Pending")} type="button">Kembalikan ke Pending</button>
+        <button className="delete-button" disabled={actionState === `${student.id}:delete`} onClick={() => onDeleteStudent(student)} type="button">Hapus Pendaftaran</button>
       </div>
-    </div>
-  );
-}
-
-function DetailItem({ className, label, value }) {
-  return (
-    <div className={className ? `detail-item ${className}` : "detail-item"}>
-      <span>{label}</span>
-      <strong>{value}</strong>
-    </div>
-  );
-}
-
-function SummaryCard({ description, label, value, variant }) {
-  return (
-    <div className={`summary-card ${variant || ""}`.trim()}>
-      <div className="summary-card-top">
-        <span>{label}</span>
-        <span aria-hidden="true" className="summary-card-accent" />
-      </div>
-      <strong>{value}</strong>
-      <small>{description}</small>
     </div>
   );
 }

@@ -52,6 +52,13 @@ export async function registerStudent(formData) {
   });
 }
 
+export async function checkRegistrationStatus(email, studentId) {
+  const params = new URLSearchParams();
+  if (email) params.set("email", email);
+  if (studentId) params.set("id", studentId);
+  return request(`/api/students/status?${params.toString()}`);
+}
+
 export async function loginAdmin(credentials) {
   return request("/api/auth/login", {
     method: "POST",
@@ -88,6 +95,27 @@ export async function deleteStudent(id) {
   return request(`/api/admin/students/${id}`, {
     method: "DELETE",
   });
+}
+
+export async function changeAdminPassword(currentPassword, newPassword) {
+  return request("/api/auth/change-password", {
+    method: "POST",
+    body: JSON.stringify({ currentPassword, newPassword }),
+  });
+}
+
+export async function bulkUpdateStudentStatus(ids, status) {
+  return request("/api/admin/students/bulk-status", {
+    method: "PATCH",
+    body: JSON.stringify({ ids, status }),
+  });
+}
+
+export async function exportStudentsCSV() {
+  const url = buildApiUrl("/api/admin/students/export");
+  const response = await fetch(url, { credentials: "include" });
+  if (!response.ok) throw new APIError("Gagal mengexport data.");
+  return response.blob();
 }
 
 export function buildDocumentUrl(path) {
